@@ -1,7 +1,7 @@
 ## INITIALIZING FOLDERS AND FILES
 URL <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
-dest <- "C:/Users/atyshchenko/Documents/data"
-datapath <- "C:/Users/atyshchenko/Documents/data/UCI HAR Dataset"
+dest <- "/Users/andriytyshchenko/Documents/CourseProject/data/"
+datapath <- "/Users/andriytyshchenko/Documents/CourseProject/data/UCI HAR Dataset"
 file <- "data.zip"
 
 ##DOWNLOADING AND UN-ZIPING
@@ -40,11 +40,25 @@ names(tmp) <- c(as.vector(features[,2]), "activity","subject")
 colNames <- grep("std\\(\\)|mean\\(\\)", features[,2], ignore.case = TRUE, value = TRUE )
 
 ## filter data based on the column names
-subData <- subset(data, select = c(colNames, "activity","subject"))
+subData <- subset(tmp, select = c(colNames, 'activity', 'subject') )
 
 ## Merge activityName based on activity ID
 finalData <- merge(subData, labels, by="activity", all.x=TRUE)
+finalData <- finalData[,names(finalData) != 'activity']
+
+## Adjust the name of the columns
+names(finalData) <- gsub("^t", "Time", names(finalData))
+names(finalData) <- gsub("^f", "Frequency", names(finalData))
+names(finalData) <- gsub("-mean\\(\\)", "Mean", names(finalData))
+names(finalData) <- gsub("-std\\(\\)", "StdDev", names(finalData))
+names(finalData) <- gsub("-", "", names(finalData))
+names(finalData) <- gsub("BodyBody", "Body", names(finalData))
+
 
 ## create new data set with averages
 library(plyr)
-tidyData <-
+meanData <- function(finalData) { meanData( finalData[1:66] ) }
+meanTidy <- ddply(finalData, .(subject, activityName), meanData)
+
+# Export the tidyData set 
+write.table(meanTidy, './tidyData.txt',row.names=TRUE,sep='\t');
